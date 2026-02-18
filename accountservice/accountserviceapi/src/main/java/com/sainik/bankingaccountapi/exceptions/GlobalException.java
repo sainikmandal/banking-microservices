@@ -1,74 +1,53 @@
 package com.sainik.bankingaccountapi.exceptions;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import com.sainik.bankingaccountapi.dtos.GenericResponse;
 
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalException {
 
-    // 1. Handle Resource Not Found (404)
     @ExceptionHandler(AccountNotFoundException.class)
-    public ResponseEntity<GenericResponse<String>> handleAccountNotFoundException(AccountNotFoundException ex) {
-        // Returns 404 Not Found
+    public ResponseEntity<GenericResponse<Object>> handleAccountNotFoundException(AccountNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new GenericResponse<>(ex.getMessage()));
+                .body(GenericResponse.error(ex.getMessage()));
     }
 
-    // 2. Handle Business Logic Errors (400)
     @ExceptionHandler(InsufficientBalanceException.class)
-    public ResponseEntity<GenericResponse<String>> handleInsufficientBalanceException(InsufficientBalanceException ex) {
-        // Returns 400 Bad Request
+    public ResponseEntity<GenericResponse<Object>> handleInsufficientBalanceException(InsufficientBalanceException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new GenericResponse<>(ex.getMessage()));
+                .body(GenericResponse.error(ex.getMessage()));
     }
 
-    // 3. Handle Data Conflicts (409)
     @ExceptionHandler(AccountAlreadyExistsException.class)
-    public ResponseEntity<GenericResponse<String>> handleAccountAlreadyExistsException(AccountAlreadyExistsException ex) {
-        // Returns 409 Conflict
+    public ResponseEntity<GenericResponse<Object>> handleAccountAlreadyExistsException(AccountAlreadyExistsException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(new GenericResponse<>(ex.getMessage()));
+                .body(GenericResponse.error(ex.getMessage()));
     }
 
-    // 4. Handle Validation Errors (400) - e.g. @NotNull, @Size failures
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<GenericResponse<Map<String,Object>>> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
-        Map<String, String> fieldErrors = new HashMap<>();
-        Map<String, Object> response = new HashMap<>();
-
-        ex.getBindingResult().getFieldErrors().forEach(error -> {
-            fieldErrors.put(error.getField(), error.getDefaultMessage());
+    public ResponseEntity<GenericResponse<Map<String, String>>> handleValidationErrors(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach(error -> {
+            String fieldName = ((FieldError) error).getField();
+            String message = error.getDefaultMessage();
+            errors.put(fieldName, message);
         });
-
-        response.put("errors", fieldErrors);
-        response.put("message", "Validation failed");
-        response.put("timestamp", LocalDateTime.now().toString());
-
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new GenericResponse<>(response));
+                .body(new GenericResponse<>("Validation failed", errors, false));
     }
 
-    // 5. Handle Generic/Unknown Errors (500)
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<GenericResponse<String>> handleException(Exception ex) {
-        // SECURITY: We do NOT pass ex.getMessage() here to avoid exposing internal logic
-        // We return a generic message instead.
+    public ResponseEntity<GenericResponse<Object>> handleException(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new GenericResponse<>("An internal server error occurred. Please contact support."));
-    }
-
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<GenericResponse<String>> handleRuntimeException(RuntimeException ex) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new GenericResponse<>("An internal runtime error occurred."));
+                .body(GenericResponse.error("An unexpected error occurred: " + ex.getMessage()));
     }
 }

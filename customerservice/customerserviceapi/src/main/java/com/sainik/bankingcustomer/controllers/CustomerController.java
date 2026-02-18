@@ -26,55 +26,49 @@ public class CustomerController {
     @Autowired
     private CustomerMapper customerMapper;
 
-    // POST - Register a new customer
     @PreAuthorize("hasAnyAuthority('SCOPE_developer')")
     @PostMapping("/v1.0")
-    public ResponseEntity<GenericResponse> addCustomer(@Valid @RequestBody CustomerDTO customerDTO) {
+    public ResponseEntity<GenericResponse<CustomerDTO>> addCustomer(@Valid @RequestBody CustomerDTO customerDTO) {
         Customer savedCustomer = customerService.addCustomer(customerDTO);
         CustomerDTO savedDTO = customerMapper.entitytodto(savedCustomer);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new GenericResponse(savedDTO));
+                .body(GenericResponse.success("Customer created successfully", savedDTO));
     }
 
-    // GET - View all customer profiles
     @GetMapping("/v1.0")
-    public ResponseEntity<GenericResponse> getAllCustomers() {
+    public ResponseEntity<GenericResponse<List<CustomerDTO>>> getAllCustomers() {
         List<Customer> customers = customerService.getAllCustomers();
         List<CustomerDTO> customerDTOs = customerMapper.entitytolistdto(customers);
-        return ResponseEntity.ok(new GenericResponse(customerDTOs));
+        return ResponseEntity.ok(GenericResponse.success("Customers retrieved successfully", customerDTOs));
     }
 
-    // GET - View customer profile by ID
     @GetMapping("/v1.0/{id}")
-    public ResponseEntity<GenericResponse> getCustomerById(@PathVariable("id") Long id) {
+    public ResponseEntity<GenericResponse<CustomerDTO>> getCustomerById(@PathVariable("id") Long id) {
         Customer customer = customerService.getCustomerById(id);
         CustomerDTO customerDTO = customerMapper.entitytodto(customer);
-        return ResponseEntity.ok(new GenericResponse(customerDTO));
+        return ResponseEntity.ok(GenericResponse.success("Customer retrieved successfully", customerDTO));
     }
 
-    // GET - View customer profile by email
     @GetMapping("/v1.0/email/{email}")
-    public ResponseEntity<GenericResponse> getCustomerByEmail(@PathVariable("email") String email) {
+    public ResponseEntity<GenericResponse<CustomerDTO>> getCustomerByEmail(@PathVariable("email") String email) {
         Customer customer = customerService.getCustomerByEmail(email);
         CustomerDTO customerDTO = customerMapper.entitytodto(customer);
-        return ResponseEntity.ok(new GenericResponse(customerDTO));
+        return ResponseEntity.ok(GenericResponse.success("Customer retrieved successfully", customerDTO));
     }
 
-    // PUT - Update customer data
     @PreAuthorize("hasAnyAuthority('SCOPE_developer')")
     @PutMapping("/v1.0/{id}")
-    public ResponseEntity<GenericResponse> updateCustomer(@PathVariable("id") Long id,
-                                                          @Valid @RequestBody CustomerDTO customerDTO) {
+    public ResponseEntity<GenericResponse<CustomerDTO>> updateCustomer(@PathVariable("id") Long id,
+                                                                       @Valid @RequestBody CustomerDTO customerDTO) {
         Customer updatedCustomer = customerService.updateCustomer(id, customerDTO);
         CustomerDTO updatedDTO = customerMapper.entitytodto(updatedCustomer);
-        return ResponseEntity.ok(new GenericResponse(updatedDTO));
+        return ResponseEntity.ok(GenericResponse.success("Customer updated successfully", updatedDTO));
     }
 
-    // DELETE - Remove a customer profile
     @PreAuthorize("hasAnyAuthority('SCOPE_developer')")
     @DeleteMapping("/v1.0/{id}")
-    public ResponseEntity<GenericResponse> deleteCustomer(@PathVariable("id") Long id) {
+    public ResponseEntity<GenericResponse<Object>> deleteCustomer(@PathVariable("id") Long id) {
         customerService.deleteCustomer(id);
-        return ResponseEntity.ok(new GenericResponse("Customer deleted successfully"));
+        return ResponseEntity.ok(GenericResponse.success("Customer deleted successfully", null));
     }
 }

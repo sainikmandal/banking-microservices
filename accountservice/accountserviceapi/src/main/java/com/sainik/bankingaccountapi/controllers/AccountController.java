@@ -26,55 +26,49 @@ public class AccountController {
     @Autowired
     private AccountMapper accountMapper;
 
-    // POST - Create a new account
     @PreAuthorize("hasAnyAuthority('SCOPE_developer')")
     @PostMapping("/v1.0")
-    public ResponseEntity<GenericResponse> addAccount(@Valid @RequestBody AccountDTO accountDTO) {
+    public ResponseEntity<GenericResponse<AccountDTO>> addAccount(@Valid @RequestBody AccountDTO accountDTO) {
         Account savedAccount = accountService.addAccount(accountDTO);
         AccountDTO savedAccountDTO = accountMapper.entitytodto(savedAccount);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new GenericResponse(savedAccountDTO));
+                .body(GenericResponse.success("Account created successfully", savedAccountDTO));
     }
 
-    // GET - Retrieve all accounts
     @GetMapping("/v1.0")
-    public ResponseEntity<GenericResponse> getAllAccounts() {
+    public ResponseEntity<GenericResponse<List<AccountDTO>>> getAllAccounts() {
         List<Account> accounts = accountService.getAllAccounts();
         List<AccountDTO> accountDTOs = accountMapper.entitytolistdto(accounts);
-        return ResponseEntity.ok(new GenericResponse(accountDTOs));
+        return ResponseEntity.ok(GenericResponse.success("Accounts retrieved successfully", accountDTOs));
     }
 
-    // GET - Retrieve account by ID
     @GetMapping("/v1.0/{id}")
-    public ResponseEntity<GenericResponse> getAccountById(@PathVariable("id") Long id) {
+    public ResponseEntity<GenericResponse<AccountDTO>> getAccountById(@PathVariable("id") Long id) {
         Account account = accountService.getAccountById(id);
         AccountDTO accountDTO = accountMapper.entitytodto(account);
-        return ResponseEntity.ok(new GenericResponse(accountDTO));
+        return ResponseEntity.ok(GenericResponse.success("Account retrieved successfully", accountDTO));
     }
 
-    // GET - Retrieve account by account number
     @GetMapping("/v1.0/number/{accountNumber}")
-    public ResponseEntity<GenericResponse> getAccountByNumber(@PathVariable("accountNumber") String accountNumber) {
+    public ResponseEntity<GenericResponse<AccountDTO>> getAccountByNumber(@PathVariable("accountNumber") String accountNumber) {
         Account account = accountService.getAccountByNumber(accountNumber);
         AccountDTO accountDTO = accountMapper.entitytodto(account);
-        return ResponseEntity.ok(new GenericResponse(accountDTO));
+        return ResponseEntity.ok(GenericResponse.success("Account retrieved successfully", accountDTO));
     }
 
-    // PUT - Update account information
     @PreAuthorize("hasAnyAuthority('SCOPE_developer')")
     @PutMapping("/v1.0/{id}")
-    public ResponseEntity<GenericResponse> updateAccount(@PathVariable("id") Long id,
-                                                         @Valid @RequestBody AccountDTO accountDTO) {
+    public ResponseEntity<GenericResponse<AccountDTO>> updateAccount(@PathVariable("id") Long id,
+                                                                     @Valid @RequestBody AccountDTO accountDTO) {
         Account updatedAccount = accountService.updateAccount(id, accountDTO);
         AccountDTO updatedDTO = accountMapper.entitytodto(updatedAccount);
-        return ResponseEntity.ok(new GenericResponse(updatedDTO));
+        return ResponseEntity.ok(GenericResponse.success("Account updated successfully", updatedDTO));
     }
 
-    // DELETE - Close/remove an account
     @PreAuthorize("hasAnyAuthority('SCOPE_developer')")
     @DeleteMapping("/v1.0/{id}")
-    public ResponseEntity<GenericResponse> deleteAccount(@PathVariable("id") Long id) {
+    public ResponseEntity<GenericResponse<Object>> deleteAccount(@PathVariable("id") Long id) {
         accountService.deleteAccount(id);
-        return ResponseEntity.ok(new GenericResponse("Account deleted successfully"));
+        return ResponseEntity.ok(GenericResponse.success("Account deleted successfully", null));
     }
 }

@@ -1,17 +1,23 @@
 package com.sainik.bankingcustomer.dtos;
 
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Getter
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class GenericResponse<T> {
+
     private String message;
     private T data;
+    private boolean success;
 
-    public GenericResponse(String message) {
-        this.message = message;
+    public static <T> GenericResponse<T> success(String message, T data) {
+        return new GenericResponse<>(message, data, true);
     }
 
-    public GenericResponse(T data) {
-        this.data = data;
+    public static <T> GenericResponse<T> error(String message) {
+        return new GenericResponse<>(message, null, false);
     }
 }
