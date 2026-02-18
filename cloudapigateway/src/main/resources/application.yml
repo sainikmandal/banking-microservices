@@ -40,17 +40,37 @@ spring:
           filters:
             - RewritePath=/accountservice/(?<segment>.*), /${segment}
 
-        # --- Customer Service (future) ---
-        #- id: customerservice
-        #  uri: lb://customerservice
-        #  predicates:
-        #    - Path=/customers/**
+        # --- Customer Service ---
+        - id: customerservice
+          uri: lb://customerservice
+          predicates:
+            - Path=/customers/**
+          filters:
+            - StripPrefix=0
 
-        # --- Transaction Service (future) ---
-        #- id: transactionservice
-        #  uri: lb://transactionservice
-        #  predicates:
-        #    - Path=/transactions/**
+        # --- Customer Service Swagger (access via gateway) ---
+        - id: customerservice-docs
+          uri: lb://customerservice
+          predicates:
+            - Path=/customerservice/v3/api-docs/**
+          filters:
+            - RewritePath=/customerservice/(?<segment>.*), /${segment}
+
+        # --- Transaction Service ---
+        - id: transactionservice
+          uri: lb://transactionservice
+          predicates:
+            - Path=/transactions/**
+          filters:
+            - StripPrefix=0
+
+        # --- Transaction Service Swagger (access via gateway) ---
+        - id: transactionservice-docs
+          uri: lb://transactionservice
+          predicates:
+            - Path=/transactionservice/v3/api-docs/**
+          filters:
+            - RewritePath=/transactionservice/(?<segment>.*), /${segment}
 
   # --- Keycloak OAuth2 (Gateway as Resource Server) ---
   security:
