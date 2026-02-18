@@ -1,13 +1,13 @@
-package com.cognizant.hospitalmgmt;
+package com.sainik.banking.gateway;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class EurekadiscoveryserverApplicationTests {
+class CloudapigatewayApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
+    @Test
+    void contextLoads() {
+    }
 
 }

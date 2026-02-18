@@ -1,16 +1,13 @@
 package com.sainik.bankingaccountapi.configuration;
 
-import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
-import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
-import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.context.annotation.Configuration;
 
-@Component
-public class SwaggerConfiguration implements RepositoryRestConfigurer {
-
-    @Override
-    public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config, CorsRegistry cors) {
-        // Prevents Spring Data REST from exposing repositories directly as REST endpoints
-        config.setExposeRepositoryMethodsByDefault(false);
-    }
+/**
+ * Placeholder for any future Swagger / SpringDoc customisation.
+ * OpenAPI bean (SecurityScheme, server info) is defined in OpenAPISecurityConfig.
+ * Spring Data REST has been removed — the previous RepositoryRestConfigurer
+ * code is no longer needed.
+ */
+@Configuration
+public class SwaggerConfiguration {
 }

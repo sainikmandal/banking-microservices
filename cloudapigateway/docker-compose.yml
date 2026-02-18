@@ -6,7 +6,7 @@ services:
     image: gatewayapp
     build:
       context: ./
-      dockerfile: dockerfile
+      dockerfile: Dockerfile
 
     deploy:
       restart_policy:
