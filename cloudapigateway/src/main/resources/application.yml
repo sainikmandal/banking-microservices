@@ -3,14 +3,14 @@ server:
 
 eureka:
   client:
-    serviceUrl:
-      defaultZone: http://eureka-server:8761/eureka/
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
     register-with-eureka: true
     fetch-registry: true
   instance:
     hostname: localhost
     prefer-ip-address: true
-    ip-address: localhost
+
 spring:
   application:
     name: gateway
@@ -19,18 +19,47 @@ spring:
 
   cloud:
     gateway:
-      routes:
-        - id: USERSERVICE
-          uri: lb://USERSERVICE
-          predicates:
-            - Path=/swagger-ui.html, /v3/api-docs/**, /swagger-ui/**,/users/**,/roles/**
-            #- Path=/users/**
-          filters:
-            - RewritePath=/USERSERVICE/(?<segment>.*), /$\\{segment}
       discovery:
         locator:
           enabled: true
-        #lower-case-service-id: true
+          lower-case-service-id: true
+      routes:
+        # --- Account Service ---
+        - id: accountservice
+          uri: lb://accountservice
+          predicates:
+            - Path=/accounts/**
+          filters:
+            - StripPrefix=0
+
+        # --- Account Service Swagger (access via gateway) ---
+        - id: accountservice-docs
+          uri: lb://accountservice
+          predicates:
+            - Path=/accountservice/v3/api-docs/**
+          filters:
+            - RewritePath=/accountservice/(?<segment>.*), /${segment}
+
+        # --- Customer Service (future) ---
+        #- id: customerservice
+        #  uri: lb://customerservice
+        #  predicates:
+        #    - Path=/customers/**
+
+        # --- Transaction Service (future) ---
+        #- id: transactionservice
+        #  uri: lb://transactionservice
+        #  predicates:
+        #    - Path=/transactions/**
+
+  # --- Keycloak OAuth2 (Gateway as Resource Server) ---
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/banking-realm
+          jwk-set-uri: http://localhost:8080/realms/banking-realm/protocol/openid-connect/certs
+
 management:
   endpoints:
     web:
