@@ -71,4 +71,16 @@ public class AccountController {
         accountService.deleteAccount(id);
         return ResponseEntity.ok(GenericResponse.success("Account deleted successfully", null));
     }
+
+    /**
+     * Internal probe — permit-all (no JWT required).
+     * Called by other microservices (e.g. transaction-service) via their
+     * {@code AccountServiceClient} to verify an account exists before
+     * recording a transaction.
+     */
+    @GetMapping("/exists/{id}")
+    public ResponseEntity<GenericResponse<Boolean>> accountExists(@PathVariable("id") Long id) {
+        boolean exists = accountService.accountExists(id);
+        return ResponseEntity.ok(GenericResponse.success("Account existence checked", exists));
+    }
 }

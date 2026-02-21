@@ -1,13 +1,23 @@
 package com.sainik.bankingtransaction.configuration;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
+import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 
 /**
- * Placeholder for any future Swagger / SpringDoc customisation.
- * OpenAPI bean (SecurityScheme, server info) is defined in OpenAPISecurityConfig.
- * Spring Data REST has been removed — the previous RepositoryRestConfigurer
- * code is no longer needed.
+ * Disables Spring Data REST's automatic endpoint exposure so that only
+ * the explicitly defined @RestController endpoints appear in Swagger UI.
+ *
+ * Without this, Spring Data REST would publish /transactions, etc.
+ * with HATEOAS links that clash with (and confuse) the custom controllers.
  */
 @Configuration
-public class SwaggerConfiguration {
+public class SwaggerConfiguration implements RepositoryRestConfigurer {
+
+    @Override
+    public void configureRepositoryRestConfiguration(
+            RepositoryRestConfiguration config, CorsRegistry cors) {
+        config.setExposeRepositoryMethodsByDefault(false);
+    }
 }

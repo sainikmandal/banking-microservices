@@ -23,6 +23,24 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
+
+      # --- CORS — allows React/Angular frontends to call through the gateway ---
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - http://localhost:3000
+              - http://localhost:4200
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+
       routes:
         # --- Account Service ---
         - id: accountservice
@@ -32,7 +50,8 @@ spring:
           filters:
             - StripPrefix=0
 
-        # --- Account Service Swagger (access via gateway) ---
+        # --- Account Service Swagger (proxied through gateway) ---
+        # GatewaySwaggerAggregatorConfig discovers this route via the "-docs" suffix
         - id: accountservice-docs
           uri: lb://accountservice
           predicates:
@@ -48,7 +67,7 @@ spring:
           filters:
             - StripPrefix=0
 
-        # --- Customer Service Swagger (access via gateway) ---
+        # --- Customer Service Swagger (proxied through gateway) ---
         - id: customerservice-docs
           uri: lb://customerservice
           predicates:
@@ -64,7 +83,7 @@ spring:
           filters:
             - StripPrefix=0
 
-        # --- Transaction Service Swagger (access via gateway) ---
+        # --- Transaction Service Swagger (proxied through gateway) ---
         - id: transactionservice-docs
           uri: lb://transactionservice
           predicates:
@@ -72,13 +91,13 @@ spring:
           filters:
             - RewritePath=/transactionservice/(?<segment>.*), /${segment}
 
-  # --- Keycloak OAuth2 (Gateway as Resource Server) ---
+  # --- OAuth2 (Gateway validates JWTs issued by Spring Authorization Server on :9000) ---
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080/realms/banking-realm
-          jwk-set-uri: http://localhost:8080/realms/banking-realm/protocol/openid-connect/certs
+          issuer-uri: http://localhost:9000
+          jwk-set-uri: http://localhost:9000/oauth2/jwks
 
 management:
   endpoints:
@@ -86,4 +105,25 @@ management:
       exposure:
         include: "*"
 
-
+# --- SpringDoc / Swagger UI — aggregated view of all banking service APIs ---
+# Access at: http://localhost:8765/swagger-ui.html
+# GatewaySwaggerAggregatorConfig also populates URLs dynamically from the -docs routes
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    disable-swagger-default-url: true
+    path: /swagger-ui.html
+    config-url: /v3/api-docs/swagger-config
+    # Static URL list (fallback / explicit ordering shown in the UI drop-down)
+    urls:
+      - name: accountservice
+        url: /accountservice/v3/api-docs
+      - name: customerservice
+        url: /customerservice/v3/api-docs
+      - name: transactionservice
+        url: /transactionservice/v3/api-docs
+    oauth:
+      client-id: banking-gateway-client
+      use-pkce-with-authorization-code-grant: true
+      scopes: developer

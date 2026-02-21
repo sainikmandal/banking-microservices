@@ -28,7 +28,9 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/webjars/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS).permitAll()
                         .requestMatchers("/actuator/**").permitAll()
-                        // Protect all account endpoints
+                        // Internal service-to-service probe — no JWT required (called by other services)
+                        .requestMatchers("/accounts/exists/**").permitAll()
+                        // Protect all other account endpoints
                         .requestMatchers("/accounts/**").authenticated()
                         .anyRequest().authenticated()
                 )

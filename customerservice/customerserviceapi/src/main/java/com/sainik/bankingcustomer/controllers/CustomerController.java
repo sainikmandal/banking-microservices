@@ -71,4 +71,16 @@ public class CustomerController {
         customerService.deleteCustomer(id);
         return ResponseEntity.ok(GenericResponse.success("Customer deleted successfully", null));
     }
+
+    /**
+     * Internal probe — permit-all (no JWT required).
+     * Called by other microservices (e.g. account-service) via their
+     * {@code CustomerServiceClient} to verify a customer exists before
+     * opening a new account.
+     */
+    @GetMapping("/exists/{id}")
+    public ResponseEntity<GenericResponse<Boolean>> customerExists(@PathVariable("id") Long id) {
+        boolean exists = customerService.customerExists(id);
+        return ResponseEntity.ok(GenericResponse.success("Customer existence checked", exists));
+    }
 }

@@ -3,8 +3,8 @@ package com.sainik.bankingtransaction.dtos;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -38,8 +38,8 @@ public class TransactionDTO {
     @Schema(description = "Transaction date (auto-set on creation)", accessMode = Schema.AccessMode.READ_ONLY)
     private LocalDateTime transactionDate;
 
-    @NotBlank(message = "Status is required")
-    @Pattern(regexp = "^(SUCCESS|FAILED|PENDING)$", message = "Status must be SUCCESS, FAILED, or PENDING")
-    @Schema(description = "Transaction status", example = "PENDING", allowableValues = {"SUCCESS", "FAILED", "PENDING"})
+    @Schema(description = "Transaction status — set by the server based on account validation (SUCCESS | FAILED)",
+            accessMode = Schema.AccessMode.READ_ONLY,
+            allowableValues = {"SUCCESS", "FAILED"})
     private String status;
 }

@@ -8,36 +8,51 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * OpenAPI / Swagger security configuration for the Account Service.
+ *
+ * Registers two OAuth2 schemes mirroring Keycloak client registrations:
+ *   - "keycloakAdmin"      – admin scope       (management / read-only)
+ *   - "keycloakDeveloper"  – developer scope   (full CRUD)
+ *
+ * The issuer URL is read from {@code keycloak.issuer} so it stays in sync
+ * with the JWT resource-server configuration without duplicating the realm path.
+ */
 @Configuration
 public class OpenAPISecurityConfig {
 
-    @Value("${keycloak.auth-server-url}")
-    String authServerUrl;
-
-    @Value("${keycloak.realm}")
-    String realm;
+    /** e.g. http://localhost:8080/realms/banking-realm */
+    @Value("${keycloak.issuer}")
+    private String issuer;
 
     @Bean
     public OpenAPI openAPI() {
-        String authUrl = authServerUrl + "/realms/" + realm + "/protocol/openid-connect/auth";
-        String tokenUrl = authServerUrl + "/realms/" + realm + "/protocol/openid-connect/token";
-
         return new OpenAPI()
                 .components(new Components()
-                        .addSecuritySchemes("keycloak", new SecurityScheme()
-                                .type(SecurityScheme.Type.OAUTH2)
-                                .description("Oauth2 flow")
-                                .flows(new OAuthFlows()
-                                        .authorizationCode(new OAuthFlow()
-                                                .authorizationUrl(authUrl)
-                                                .tokenUrl(tokenUrl)
-                                                .scopes(new Scopes()
-                                                        .addString("openid", "openid scope")
-                                                        .addString("profile", "profile scope"))))))
-                .addSecurityItem(new SecurityRequirement().addList("keycloak"))
+                        .addSecuritySchemes("keycloakAdmin",
+                                oauthScheme("admin",     "Admin access"))
+                        .addSecuritySchemes("keycloakDeveloper",
+                                oauthScheme("developer", "Developer / full-CRUD access"))
+                )
+                .addSecurityItem(new SecurityRequirement().addList("keycloakAdmin"))
+                .addSecurityItem(new SecurityRequirement().addList("keycloakDeveloper"))
                 .info(new Info()
                         .title("Banking Account Service")
                         .description("Account Management API with OAuth2 Security")
                         .version("1.0"));
+    }
+
+    private SecurityScheme oauthScheme(String scope, String description) {
+        String authUrl  = issuer + "/oauth2/authorize";
+        String tokenUrl = issuer + "/oauth2/token";
+
+        OAuthFlow code = new OAuthFlow()
+                .authorizationUrl(authUrl)
+                .tokenUrl(tokenUrl)
+                .scopes(new Scopes().addString(scope, description));
+
+        return new SecurityScheme()
+                .type(SecurityScheme.Type.OAUTH2)
+                .flows(new OAuthFlows().authorizationCode(code));
     }
 }

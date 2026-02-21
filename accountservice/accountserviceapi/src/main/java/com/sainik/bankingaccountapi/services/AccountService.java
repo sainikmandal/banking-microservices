@@ -67,4 +67,9 @@ public class AccountService {
         Account account = getAccountById(id);
         accountRepository.delete(account);
     }
+
+    // Internal probe — called by other microservices (e.g. transaction-service) via REST client
+    public boolean accountExists(Long id) {
+        return accountRepository.existsById(id);
+    }
 }

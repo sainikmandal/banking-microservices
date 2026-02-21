@@ -68,4 +68,9 @@ public class CustomerService {
         Customer customer = getCustomerById(id);
         customerRepository.delete(customer);
     }
+
+    // Internal probe — called by other microservices (e.g. account-service) via REST client
+    public boolean customerExists(Long id) {
+        return customerRepository.existsById(id);
+    }
 }

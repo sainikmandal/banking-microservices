@@ -1,5 +1,6 @@
 package com.sainik.bankingtransaction.services;
 
+import com.sainik.bankingtransaction.client.AccountServiceClient;
 import com.sainik.bankingtransaction.dtos.TransactionDTO;
 import com.sainik.bankingtransaction.exceptions.InvalidTransactionException;
 import com.sainik.bankingtransaction.exceptions.TransactionNotFoundException;
@@ -22,13 +23,16 @@ public class TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final TransactionMapper transactionMapper;
+    private final AccountServiceClient accountServiceClient;
 
     /**
      * Initiate (create) a new transaction.
-     * Business rules:
-     *   - Amount must be positive (enforced by @Positive in DTO + here for safety)
-     *   - Withdrawal/Transfer amounts must not result in a negative balance concept
-     *     (here we validate amount > 0; actual balance check would require AccountService)
+     *
+     * Status is determined entirely by the server — never trusted from the client:
+     *   - Calls account-service via RestClient to check the account exists
+     *   - Account found    → status = SUCCESS
+     *   - Account missing  → status = FAILED  (still persisted for audit trail)
+     *   - Network/error    → status = FAILED  (AccountServiceClient swallows the error)
      */
     public TransactionDTO createTransaction(TransactionDTO dto) {
         log.info("Creating transaction for accountId={}, type={}, amount={}", dto.getAccountId(), dto.getType(), dto.getAmount());
@@ -38,17 +42,17 @@ public class TransactionService {
             throw new InvalidTransactionException("Transaction amount must be positive");
         }
 
-        // Guard: Withdrawal/Transfer - amount cannot be zero or negative (already caught above, but explicit messaging)
-        if (("Withdrawal".equalsIgnoreCase(dto.getType()) || "Transfer".equalsIgnoreCase(dto.getType()))
-                && dto.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvalidTransactionException("Withdrawal and Transfer amounts must be greater than zero");
-        }
+        // Validate account exists via inter-service RestClient call
+        boolean accountExists = accountServiceClient.accountExists(dto.getAccountId());
+        String resolvedStatus = accountExists ? "SUCCESS" : "FAILED";
+        log.info("Account existence check for accountId={}: {} → status={}", dto.getAccountId(), accountExists, resolvedStatus);
 
         Transaction transaction = transactionMapper.toEntity(dto);
         transaction.setTransactionDate(LocalDateTime.now());
+        transaction.setStatus(resolvedStatus); // always overwrite — client input is ignored
 
         Transaction saved = transactionRepository.save(transaction);
-        log.info("Transaction created with ID={}", saved.getId());
+        log.info("Transaction ID={} persisted with status={}", saved.getId(), saved.getStatus());
         return transactionMapper.toDTO(saved);
     }
 
