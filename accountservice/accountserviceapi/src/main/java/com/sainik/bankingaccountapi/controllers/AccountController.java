@@ -1,6 +1,8 @@
 package com.sainik.bankingaccountapi.controllers;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,5 +84,26 @@ public class AccountController {
     public ResponseEntity<GenericResponse<Boolean>> accountExists(@PathVariable("id") Long id) {
         boolean exists = accountService.accountExists(id);
         return ResponseEntity.ok(GenericResponse.success("Account existence checked", exists));
+    }
+
+    /**
+     * Internal balance update — called by transaction-service after a successful transaction.
+     * Accepts a JSON body: { "delta": <signed BigDecimal> }
+     *   positive delta = credit (Deposit)
+     *   negative delta = debit  (Withdrawal / Transfer)
+     */
+    @PreAuthorize("hasAnyAuthority('SCOPE_developer')")
+    @PatchMapping("/v1.0/{id}/balance")
+    public ResponseEntity<GenericResponse<AccountDTO>> updateBalance(
+            @PathVariable("id") Long id,
+            @RequestBody Map<String, BigDecimal> body) {
+        BigDecimal delta = body.get("delta");
+        if (delta == null) {
+            return ResponseEntity.badRequest()
+                    .body(GenericResponse.error("Request body must contain 'delta' field"));
+        }
+        Account updated = accountService.updateBalance(id, delta);
+        AccountDTO dto = accountMapper.entitytodto(updated);
+        return ResponseEntity.ok(GenericResponse.success("Balance updated successfully", dto));
     }
 }

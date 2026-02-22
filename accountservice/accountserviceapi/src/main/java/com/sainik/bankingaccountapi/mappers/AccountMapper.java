@@ -3,6 +3,7 @@ package com.sainik.bankingaccountapi.mappers;
 import java.util.List;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 import com.sainik.bankingaccountapi.dtos.AccountDTO;
 import com.sainik.bankingaccountapi.models.Account;
@@ -11,6 +12,8 @@ import com.sainik.bankingaccountapi.models.Account;
 public interface AccountMapper {
 
     // dto to entity
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
     Account dtotoentity(AccountDTO accountDTO);
 
     // entity to dto

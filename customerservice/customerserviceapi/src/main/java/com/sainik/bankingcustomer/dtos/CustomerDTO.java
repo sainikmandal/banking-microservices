@@ -1,5 +1,6 @@
 package com.sainik.bankingcustomer.dtos;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class CustomerDTO {
 
+    @Schema(accessMode = Schema.AccessMode.READ_ONLY)
     private Long id;
 
     @NotBlank(message = "First name cannot be blank")
@@ -34,5 +36,6 @@ public class CustomerDTO {
     @NotBlank(message = "Address cannot be blank")
     private String address;
 
+    @Schema(accessMode = Schema.AccessMode.READ_ONLY)
     private LocalDateTime createdAt;
 }

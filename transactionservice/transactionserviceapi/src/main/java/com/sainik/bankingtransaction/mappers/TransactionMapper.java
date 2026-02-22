@@ -11,6 +11,9 @@ public interface TransactionMapper {
 
     TransactionDTO toDTO(Transaction transaction);
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "transactionDate", ignore = true)
     Transaction toEntity(TransactionDTO transactionDTO);
 
     @Mapping(target = "id", ignore = true)

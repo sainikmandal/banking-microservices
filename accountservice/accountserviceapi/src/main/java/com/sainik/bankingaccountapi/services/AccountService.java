@@ -1,5 +1,6 @@
 package com.sainik.bankingaccountapi.services;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -71,5 +72,23 @@ public class AccountService {
     // Internal probe — called by other microservices (e.g. transaction-service) via REST client
     public boolean accountExists(Long id) {
         return accountRepository.existsById(id);
+    }
+
+    /**
+     * Apply a balance delta to the account.
+     *  positive delta = credit  (Deposit)
+     *  negative delta = debit   (Withdrawal / Transfer)
+     * Throws if resulting balance would go below zero.
+     */
+    public Account updateBalance(Long id, BigDecimal delta) {
+        Account account = getAccountById(id);
+        BigDecimal newBalance = account.getBalance().add(delta);
+        if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalStateException(
+                    "Insufficient funds: current balance " + account.getBalance() +
+                    ", attempted debit " + delta.abs());
+        }
+        account.setBalance(newBalance);
+        return accountRepository.save(account);
     }
 }

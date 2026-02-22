@@ -28,11 +28,15 @@ public class TransactionService {
     /**
      * Initiate (create) a new transaction.
      *
-     * Status is determined entirely by the server — never trusted from the client:
-     *   - Calls account-service via RestClient to check the account exists
-     *   - Account found    → status = SUCCESS
-     *   - Account missing  → status = FAILED  (still persisted for audit trail)
-     *   - Network/error    → status = FAILED  (AccountServiceClient swallows the error)
+     * Status is determined entirely by the server:
+     *   1. Account must exist  → otherwise FAILED (no balance change)
+     *   2. Balance update must succeed → otherwise FAILED (e.g. insufficient funds)
+     *   3. Both pass           → SUCCESS
+     *
+     * Delta applied to account balance:
+     *   Deposit    → +amount
+     *   Withdrawal → -amount
+     *   Transfer   → -amount  (sender side only)
      */
     public TransactionDTO createTransaction(TransactionDTO dto) {
         log.info("Creating transaction for accountId={}, type={}, amount={}", dto.getAccountId(), dto.getType(), dto.getAmount());
@@ -42,18 +46,43 @@ public class TransactionService {
             throw new InvalidTransactionException("Transaction amount must be positive");
         }
 
-        // Validate account exists via inter-service RestClient call
+        // Step 1: verify account exists
         boolean accountExists = accountServiceClient.accountExists(dto.getAccountId());
-        String resolvedStatus = accountExists ? "SUCCESS" : "FAILED";
-        log.info("Account existence check for accountId={}: {} → status={}", dto.getAccountId(), accountExists, resolvedStatus);
+        log.info("Account existence check for accountId={}: {}", dto.getAccountId(), accountExists);
+
+        String resolvedStatus;
+        if (!accountExists) {
+            resolvedStatus = "FAILED";
+            log.warn("Account {} not found — transaction will be FAILED", dto.getAccountId());
+        } else {
+            // Step 2: apply balance delta
+            BigDecimal delta = balanceDelta(dto.getType(), dto.getAmount());
+            boolean balanceUpdated = accountServiceClient.updateBalance(dto.getAccountId(), delta);
+            resolvedStatus = balanceUpdated ? "SUCCESS" : "FAILED";
+            log.info("Balance update for accountId={}, delta={} → status={}", dto.getAccountId(), delta, resolvedStatus);
+        }
 
         Transaction transaction = transactionMapper.toEntity(dto);
         transaction.setTransactionDate(LocalDateTime.now());
-        transaction.setStatus(resolvedStatus); // always overwrite — client input is ignored
+        transaction.setStatus(resolvedStatus); // always server-determined
 
         Transaction saved = transactionRepository.save(transaction);
         log.info("Transaction ID={} persisted with status={}", saved.getId(), saved.getStatus());
         return transactionMapper.toDTO(saved);
+    }
+
+    /**
+     * Signed delta to apply to the account balance for each transaction type.
+     *   Deposit    → positive (credit)
+     *   Withdrawal → negative (debit)
+     *   Transfer   → negative (debit — sender side)
+     */
+    private BigDecimal balanceDelta(String type, BigDecimal amount) {
+        return switch (type.toLowerCase()) {
+            case "deposit"              -> amount;
+            case "withdrawal", "transfer" -> amount.negate();
+            default -> BigDecimal.ZERO;
+        };
     }
 
     /**

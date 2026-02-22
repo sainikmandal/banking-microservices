@@ -4,7 +4,6 @@ import com.sainik.bankingtransaction.dtos.GenericResponse;
 import com.sainik.bankingtransaction.dtos.TransactionDTO;
 import com.sainik.bankingtransaction.services.TransactionService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,8 +31,7 @@ public class TransactionController {
     @PreAuthorize("hasAnyAuthority('SCOPE_developer')")
     @Operation(
             summary = "Initiate a transaction",
-            description = "Create a new banking transaction. Amount must be positive.",
-            security = @SecurityRequirement(name = "oauth2")
+            description = "Create a new banking transaction. Amount must be positive."
     )
     public ResponseEntity<GenericResponse<TransactionDTO>> createTransaction(
             @Valid @RequestBody TransactionDTO transactionDTO) {
@@ -48,8 +46,7 @@ public class TransactionController {
     @GetMapping("/v1.0")
     @Operation(
             summary = "Get all transactions",
-            description = "Retrieve all transactions",
-            security = @SecurityRequirement(name = "oauth2")
+            description = "Retrieve all transactions"
     )
     public ResponseEntity<GenericResponse<List<TransactionDTO>>> getAllTransactions() {
         List<TransactionDTO> transactions = transactionService.getAllTransactions();
@@ -62,8 +59,7 @@ public class TransactionController {
     @GetMapping("/v1.0/{id}")
     @Operation(
             summary = "Get transaction by ID",
-            description = "Retrieve a specific transaction by its ID",
-            security = @SecurityRequirement(name = "oauth2")
+            description = "Retrieve a specific transaction by its ID"
     )
     public ResponseEntity<GenericResponse<TransactionDTO>> getTransactionById(@PathVariable Long id) {
         TransactionDTO transaction = transactionService.getTransactionById(id);
@@ -76,8 +72,7 @@ public class TransactionController {
     @GetMapping("/v1.0/account/{accountId}")
     @Operation(
             summary = "Get transactions by account ID",
-            description = "Retrieve all transactions associated with a specific account",
-            security = @SecurityRequirement(name = "oauth2")
+            description = "Retrieve all transactions associated with a specific account"
     )
     public ResponseEntity<GenericResponse<List<TransactionDTO>>> getTransactionsByAccountId(
             @PathVariable Long accountId) {
@@ -93,8 +88,7 @@ public class TransactionController {
     @PreAuthorize("hasAnyAuthority('SCOPE_developer')")
     @Operation(
             summary = "Amend a transaction",
-            description = "Update a PENDING transaction. Cannot amend SUCCESS or FAILED transactions.",
-            security = @SecurityRequirement(name = "oauth2")
+            description = "Update a PENDING transaction. Cannot amend SUCCESS or FAILED transactions."
     )
     public ResponseEntity<GenericResponse<TransactionDTO>> updateTransaction(
             @PathVariable Long id,
@@ -111,8 +105,7 @@ public class TransactionController {
     @PreAuthorize("hasAnyAuthority('SCOPE_developer')")
     @Operation(
             summary = "Cancel a transaction",
-            description = "Cancel/delete a PENDING transaction. Cannot cancel SUCCESS or FAILED transactions.",
-            security = @SecurityRequirement(name = "oauth2")
+            description = "Cancel/delete a PENDING transaction. Cannot cancel SUCCESS or FAILED transactions."
     )
     public ResponseEntity<GenericResponse<Object>> deleteTransaction(@PathVariable Long id) {
         transactionService.deleteTransaction(id);

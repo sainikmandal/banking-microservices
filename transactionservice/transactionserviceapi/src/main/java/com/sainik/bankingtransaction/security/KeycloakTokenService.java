@@ -46,7 +46,8 @@ public class KeycloakTokenService {
 
         String body = "grant_type=client_credentials"
                 + "&client_id=" + clientId
-                + "&client_secret=" + clientSecret;
+                + "&client_secret=" + clientSecret
+                + "&scope=developer";
 
         HttpEntity<String> request = new HttpEntity<>(body, headers);
 

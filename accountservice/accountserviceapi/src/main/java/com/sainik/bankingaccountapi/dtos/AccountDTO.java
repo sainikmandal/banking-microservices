@@ -1,5 +1,6 @@
 package com.sainik.bankingaccountapi.dtos;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class AccountDTO {
 
+    @Schema(accessMode = Schema.AccessMode.READ_ONLY)
     private Long id;
 
     @NotNull(message = "Account Number cannot be null")
@@ -30,5 +32,6 @@ public class AccountDTO {
     @Min(value = 0, message = "Balance cannot be negative")
     private BigDecimal balance;
 
+    @Schema(accessMode = Schema.AccessMode.READ_ONLY)
     private LocalDateTime createdAt;
 }

@@ -173,13 +173,14 @@ public class AuthServerConfig {
                 .build();
 
         // --- account-service-client ---
-        // Client Credentials: used by account-service to call other services
-        // Auth Code + PKCE:   used by Swagger UI on http://localhost:8081
+        // Client Credentials:   used by account-service backend to call other services (uses secret)
+        // Auth Code + PKCE:     used by Swagger UI in browser (no secret — NONE method)
         RegisteredClient accountClient = RegisteredClient.withId("account-service-client-id")
                 .clientId("account-service-client")
                 .clientSecret(encoder.encode(accountServiceSecret))
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
+                .clientAuthenticationMethod(ClientAuthenticationMethod.NONE) // allows PKCE-only browser flow
                 .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .redirectUri("http://localhost:8081/swagger-ui/oauth2-redirect.html")
@@ -196,6 +197,7 @@ public class AuthServerConfig {
                 .clientSecret(encoder.encode(customerServiceSecret))
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
+                .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
                 .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .redirectUri("http://localhost:8082/swagger-ui/oauth2-redirect.html")
@@ -212,6 +214,7 @@ public class AuthServerConfig {
                 .clientSecret(encoder.encode(transactionServiceSecret))
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
+                .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
                 .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .redirectUri("http://localhost:8083/swagger-ui/oauth2-redirect.html")

@@ -5,9 +5,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.math.BigDecimal;
 import java.util.Map;
 
 /**
@@ -56,6 +58,36 @@ public class AccountServiceClient {
 
         } catch (Exception ex) {
             log.error("Failed to reach account-service for accountId={}: {}", accountId, ex.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Applies a signed balance delta to the account.
+     *   positive delta = credit (Deposit)
+     *   negative delta = debit  (Withdrawal / Transfer)
+     *
+     * Returns {@code true} on success, {@code false} on any error
+     * (insufficient funds, network failure, etc.) so the transaction
+     * can be marked FAILED without throwing.
+     */
+    public boolean updateBalance(Long accountId, BigDecimal delta) {
+        try {
+            String token = tokenService.getServiceToken();
+
+            restClient.patch()
+                    .uri(accountServiceUrl + "/accounts/v1.0/" + accountId + "/balance")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("delta", delta))
+                    .retrieve()
+                    .toBodilessEntity();
+
+            log.info("Balance updated for accountId={}, delta={}", accountId, delta);
+            return true;
+
+        } catch (Exception ex) {
+            log.error("Failed to update balance for accountId={}, delta={}: {}", accountId, delta, ex.getMessage());
             return false;
         }
     }
